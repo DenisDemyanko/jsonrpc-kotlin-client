@@ -5,13 +5,9 @@ plugins {
     kotlin("plugin.serialization") version "1.8.20"
     id("com.android.library")
     id("org.jlleitschuh.gradle.ktlint") version "11.3.1"
-    `maven-publish`
+    id("maven-publish")
     id("signing")
 }
-
-// expose properties
-val sonatypeStaging = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-val sonatypeSnapshots = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
 
 val local = Properties()
 val localProperties: File = rootProject.file("local.properties")
@@ -19,8 +15,6 @@ if (localProperties.exists()) {
     localProperties.inputStream().use { local.load(it) }
 }
 
-val sonatypePasswordEnv = System.getenv("sonatypePasswordEnv")
-val sonatypeUsernameEnv = System.getenv("sonatypeUsernameEnv")
 
 val projectGithubUrl: String by project
 val projectGithubSCM: String by project
@@ -45,14 +39,19 @@ val kotlinx_coroutines_version: String by project
 val kermit_version: String by project
 
 kotlin {
+
     android {
         publishLibraryVariants("release", "debug")
     }
-    jvm {
+
+    android {
         compilations.all {
-            kotlinOptions.jvmTarget = "11"
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
         }
     }
+
     ios("ios") {
         binaries.framework {
             baseName = "jsonrpc"
@@ -63,9 +62,7 @@ kotlin {
             baseName = "jsonrpc"
         }
     }
-    js(IR) {
-        browser()
-    }
+
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -77,49 +74,19 @@ kotlin {
                 implementation("co.touchlab:kermit:$kermit_version")
             }
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
         val androidMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-android:$ktor_version")
             }
         }
-        val androidTest by getting {
-            dependencies {
-                implementation("junit:junit:4.13.2")
-            }
-        }
-        val jvmMain by getting {
-            dependencies {
-                implementation("io.ktor:ktor-client-java:$ktor_version")
-            }
-        }
-        val jvmTest by getting {
-            dependencies {
-                implementation("junit:junit:4.13.2")
-            }
-        }
+
         val iosMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-darwin:$ktor_version")
             }
         }
-        val iosTest by getting
         val iosSimulatorArm64Main by getting
         iosSimulatorArm64Main.dependsOn(iosMain)
-
-        val iosSimulatorArm64Test by getting
-        iosSimulatorArm64Test.dependsOn(iosTest)
-
-        val jsMain by getting {
-            dependencies {
-                implementation("io.ktor:ktor-client-js:$ktor_version")
-            }
-        }
-        val jsTest by getting
     }
 }
 
@@ -129,9 +96,6 @@ android {
     defaultConfig {
         minSdk = 24
         targetSdk = 31
-    }
-    testOptions {
-        unitTests.isReturnDefaultValues = true
     }
 }
 
@@ -146,12 +110,8 @@ val javadocJar by tasks.creating(Jar::class) {
 publishing {
     repositories {
         maven {
-            url = uri(sonatypeStaging)
+            url = uri("https://maven.pkg.github.com/DenisDemyanko/jsonrpc-kotlin-client")
 
-            credentials {
-                username = sonatypeUsernameEnv
-                password = sonatypePasswordEnv
-            }
         }
     }
 

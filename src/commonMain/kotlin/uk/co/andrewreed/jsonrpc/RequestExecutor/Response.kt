@@ -2,7 +2,7 @@ package uk.co.andrewreed.jsonrpc.RequestExecutor
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import uk.co.andrewreed.jsonrpc.Client.RequestId
 
 @Serializable
@@ -17,7 +17,7 @@ data class Response(
 data class Error(
     val message: String,
     val code: Int,
-    val data: JsonObject? = null
+    val data: JsonPrimitive? = null
 ) {
     override fun toString(): String {
         return "{" +
