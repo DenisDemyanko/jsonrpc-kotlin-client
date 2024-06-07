@@ -20,6 +20,7 @@ import uk.co.andrewreed.jsonrpc.kermit
 class RPCClient(private val url: String) {
 
     private val requestIdGenerator = RequestIdGenerator()
+    private var token: String? = null
 
     private val ktorClient: HttpClient = HttpClient {
         install(ContentNegotiation) { json() }
@@ -42,12 +43,21 @@ class RPCClient(private val url: String) {
         val response = ktorClient.post(url) {
             contentType(ContentType.Application.Json)
             setBody(request.buildBody())
+            if (!token.isNullOrEmpty()) {
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
+            }
         }
         kermit.i("Response -> ${response.bodyAsText()}")
         response.body<JsonObject>()["error"]?.let {
             throw ExecuteException(Json.decodeFromJsonElement<Error>(it))
         }
         return response.body()
+    }
+
+    fun setAuthToken(token: String?) {
+        this.token = token
     }
 }
 
